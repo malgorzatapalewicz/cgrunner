@@ -6,6 +6,7 @@
 #include <sys/types.h> 
 #include <fstream>
 
+using namespace ErrorUtils;
 
 namespace CgroupManager {
 
@@ -17,7 +18,7 @@ namespace CgroupManager {
     bool writeToFile(const std::string& filePath, const T& content){
     std::ofstream file(filePath);
     if(!file){
-        ErrorUtils::reportError("Error opening file", errno);
+        reportError("Error opening file", errno);
         return false;
     }
     file << content;

@@ -6,6 +6,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+using namespace ErrorUtils;
+
 namespace CgroupManager {
 
     const mode_t DIRECTORY_PERMISSIONS = 0755;
@@ -20,7 +22,7 @@ namespace CgroupManager {
         std::string cgroupPath = buildCgroupPath(groupName);
             
         if(mkdir(cgroupPath.c_str(), DIRECTORY_PERMISSIONS) == -1){ 
-            ErrorUtils::reportError("Error creating cgroup", errno);
+            reportError("Error creating cgroup", errno);
             return false;
         }
         return true;
@@ -45,7 +47,7 @@ namespace CgroupManager {
         std::string cgroupPath = buildCgroupPath(groupName);
 
         if (rmdir(cgroupPath.c_str()) == -1) {
-            ErrorUtils::reportError("Error removing cgroup", errno);
+            reportError("Error removing cgroup", errno);
             return false;
         }
 
