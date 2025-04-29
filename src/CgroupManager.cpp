@@ -1,20 +1,30 @@
 #include "CgroupManager.h"
-#include "ErrorUtils.h"
 
 #include <iostream>
 #include <cstring>
 #include <sys/stat.h>
 #include <unistd.h>
 
-using namespace ErrorUtils;
 
 namespace CgroupManager {
 
-    const mode_t DIRECTORY_PERMISSIONS = 0755;
-    const int CPU_PERIOD = 100000; //[ms]
-    const std::string CGROUP_BASE_PATH = "/sys/fs/cgroup/";
+    static const mode_t DIRECTORY_PERMISSIONS = 0755;
+    static const int CPU_PERIOD = 100000; //[ms]
+    static const std::string CGROUP_BASE_PATH = "/sys/fs/cgroup/";
 
-    std::string buildCgroupPath(const std::string& groupName, const std::string& file){
+    template <typename T>
+    static bool writeToFile(const std::string& filePath, const T& content){
+    std::ofstream file(filePath);
+    if(!file){
+        reportSystemError("Error opening file", errno);
+        return false;
+    }
+    file << content;
+    file.close();
+    return true;
+}
+
+    static std::string buildCgroupPath(const std::string& groupName, const std::string& file = ""){
         return CGROUP_BASE_PATH + groupName + (file.empty() ? "" : "/" + file);
     }
 
@@ -22,7 +32,6 @@ namespace CgroupManager {
         std::string cgroupPath = buildCgroupPath(groupName);
             
         if(mkdir(cgroupPath.c_str(), DIRECTORY_PERMISSIONS) == -1){ 
-            reportError("Error creating cgroup", errno);
             return false;
         }
         return true;
@@ -47,7 +56,6 @@ namespace CgroupManager {
         std::string cgroupPath = buildCgroupPath(groupName);
 
         if (rmdir(cgroupPath.c_str()) == -1) {
-            reportError("Error removing cgroup", errno);
             return false;
         }
 

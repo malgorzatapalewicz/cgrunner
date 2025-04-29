@@ -6,10 +6,7 @@
 
 namespace ProcessRunner {
     
-    pid_t spawnProcess();
     void runProgram(const std::string& commandLine);
-    std::vector<std::string> parseCommandLine(const std::string& commandLine);
-    std::vector<char*> convertToArgv(std::vector<std::string>& args);
 }
 
 #endif 

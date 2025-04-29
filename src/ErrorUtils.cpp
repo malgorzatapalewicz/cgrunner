@@ -4,7 +4,11 @@
 
 namespace ErrorUtils {
 
-    void reportError(const std::string& message, int errorCode){
+    void reportSystemError(const std::string& message, int errorCode){
         std::cerr << message << ": " << strerror(errorCode) << std::endl;
+    }
+
+    void reportUserError(const std::string& message) {
+        std::cerr << "Error: " << message << std::endl;
     }
 }
