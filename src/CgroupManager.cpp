@@ -1,7 +1,6 @@
 #include "CgroupManager.h"
 #include "ProcessRunner.h"
 
-#include <iostream>
 #include <cstring>
 #include <sys/stat.h>
 #include <unistd.h>

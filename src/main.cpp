@@ -2,11 +2,8 @@
 #include "ProcessRunner.h"
 #include "ArgumentParser.h"
 #include <iostream>
-#include <cstring>
-#include <getopt.h>
 #include <sys/wait.h>
 
-using namespace ProcessRunner;
 using namespace CgroupManager;
 using namespace ArgumentParser;
 using namespace ErrorUtils;
