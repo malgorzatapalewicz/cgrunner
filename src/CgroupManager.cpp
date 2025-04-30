@@ -55,7 +55,6 @@ namespace CgroupManager {
     }
 
     bool isCgroupInitialized(const std::string& groupName, int cpuPercent, size_t memoryBytes) {
-        deleteCgroup(groupName);
         if (!createCgroup(groupName)) {
             reportSystemError("Failed to create cgroup " + groupName, errno);
             return false;
