@@ -17,26 +17,32 @@ void checkRootPrivileges() {
     }
 }
 
-bool isCpuLimitExceeded(const char* arg, int& cpuPercent) {
-    try {
-        cpuPercent = std::stoi(arg);
-        if (cpuPercent <= 0 || cpuPercent > 100) {
-            reportUserError("CPU limit must be a number between 1 and 100.");
-            return false;
-        }
-        return true;
-
-    } catch (const std::invalid_argument& e) {
-        reportUserError("CPU limit must be a valid number.");
-        
-    } catch (const std::out_of_range& e) {
-        reportUserError("CPU limit value is out of range.");
-    }
-    return false;
-}
-
 bool startsWithDash(const char* arg) {
     return arg[0] == '-';
+}
+bool isCpuLimitExceeded(const char* arg, int& cpuPercent) {
+
+    if (startsWithDash(arg)) {
+        reportUserError("Missing CPU limit value after --cpu.");
+        return false;
+    }
+
+    try {
+        cpuPercent = std::stoi(arg);
+    } catch (const std::invalid_argument& e) {
+        reportUserError("CPU limit must be a valid number.");
+        return false;
+    } catch (const std::out_of_range& e) {
+        reportUserError("CPU limit value is out of range.");
+        return false;
+    }
+
+    if (cpuPercent <= 0 || cpuPercent > 100) {
+        reportUserError("CPU limit must be a number between 1 and 100.");
+        return false;
+    }
+
+    return true;
 }
 
 bool isMemoryLimitCorrect(const char* arg, size_t& memoryBytes) {
@@ -50,15 +56,17 @@ bool isMemoryLimitCorrect(const char* arg, size_t& memoryBytes) {
         memoryBytes = std::stoul(arg);
     } catch (const std::invalid_argument&) {
         reportUserError("Memory limit must be a valid number.");
+        return false;
     } catch (const std::out_of_range&) {
         reportUserError("Memory limit value is out of range.");
+        return false;
     }
 
     if (memoryBytes == 0) {
         reportUserError("Memory limit must be greater than 0.");
         return false;
     }
-    
+
     return true;
 }
 
@@ -87,39 +95,22 @@ int main(int argc, char* argv[]) {
     };
 
     int opt;
-while ((opt = getopt_long(argc, argv, "c:m:", long_options, nullptr)) != -1) {
-    switch (opt) {
-        case 'c':
-            try {
-                cpuPercent = std::stoi(optarg);
-                if (cpuPercent <= 0 || cpuPercent > 100) {
-                    reportUserError("CPU limit must be a number between 1 and 100.");
-                    return 1;
-                }
-                cpuSet = true;
-            } catch (const std::exception& e) {
-                reportUserError("Invalid CPU limit");
+    while ((opt = getopt_long(argc, argv, "c:m:", long_options, nullptr)) != -1) {
+        switch (opt) {
+            case 'c':
+                cpuSet = isCpuLimitExceeded(optarg, cpuPercent);
+                if (!cpuSet) return 1;
+                break;
+            case 'm':
+                memorySet = isMemoryLimitCorrect(optarg, memoryBytes);
+                if (!memorySet) return 1;
+                break;
+            default:
+                reportUserError("Invalid option.");
                 return 1;
-            }
-            break;
-        case 'm':
-            try {
-                memoryBytes = std::stoul(optarg);
-                if (memoryBytes == 0) {
-                    reportUserError("Memory limit must be greater than 0.");
-                    return 1;
-                }
-                memorySet = true;
-            } catch (const std::exception& e) {
-                reportUserError("Invalid memory limit");
-                return 1;
-            }
-            break;
-        default:
-            reportUserError("Invalid option.");
-            return 1;
+        }
     }
-}
+
 
 
     if (!cpuSet || !memorySet) {
