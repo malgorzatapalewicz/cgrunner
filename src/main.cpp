@@ -17,24 +17,49 @@ void checkRootPrivileges() {
     }
 }
 
-bool parseCpuLimit(const char* arg, int& cpuPercent) {
+bool isCpuLimitExceeded(const char* arg, int& cpuPercent) {
     try {
-        if (arg[0] == '-') return false;
         cpuPercent = std::stoi(arg);
-        return cpuPercent > 0 && cpuPercent <= 100;
-    } catch (...) {
-        return false;
+        if (cpuPercent <= 0 || cpuPercent > 100) {
+            reportUserError("CPU limit must be a number between 1 and 100.");
+            return false;
+        }
+        return true;
+
+    } catch (const std::invalid_argument& e) {
+        reportUserError("CPU limit must be a valid number.");
+        
+    } catch (const std::out_of_range& e) {
+        reportUserError("CPU limit value is out of range.");
     }
+    return false;
 }
 
-bool parseMemoryLimit(const char* arg, size_t& memoryBytes) {
+bool startsWithDash(const char* arg) {
+    return arg[0] == '-';
+}
+
+bool isMemoryLimitCorrect(const char* arg, size_t& memoryBytes) {
+
+    if (startsWithDash(arg)){
+        reportUserError("Missing memory limit value after --memory.");
+        return false;
+    } 
+
     try {
-        if (arg[0] == '-') return false;
         memoryBytes = std::stoul(arg);
-        return memoryBytes > 0;
-    } catch (...) {
+    } catch (const std::invalid_argument&) {
+        reportUserError("Memory limit must be a valid number.");
+    } catch (const std::out_of_range&) {
+        reportUserError("Memory limit value is out of range.");
+    }
+
+    if (memoryBytes == 0) {
+        reportUserError("Memory limit must be greater than 0.");
         return false;
     }
+    
+    return true;
 }
 
 int main(int argc, char* argv[]) {
