@@ -5,8 +5,7 @@
 #include <vector>
 
 namespace ProcessRunner {
-    
-    void runProgram(const std::string& commandLine);
+    void runProgram(const std::string &commandLine);
 }
 
-#endif 
+#endif
