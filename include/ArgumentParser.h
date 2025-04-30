@@ -3,12 +3,10 @@
 
 #include <string>
 
-namespace ArgumentParser {
-
-    template <typename T>
-    bool isLimitParsable(const char *arg, T &limitValue, const char *limitType);
+namespace ArgumentParser
+{
     void parseArguments(int argc, char *argv[], bool &cpuSet, bool &memorySet, int &cpuPercent, size_t &memoryBytes);
-
+    void validateProvidedLimits(bool cpu, bool memory);
 }
 
 #endif

@@ -8,13 +8,12 @@
 
 using namespace ErrorUtils;
 
-namespace CgroupManager {
-    
-    bool createGroup(const std::string &groupName);
-    bool setCpuLimit(const std::string &groupName, int cpuPercent);
-    bool setMemoryLimit(const std::string &groupName, size_t memoryBytes);
-    bool addProcessToCgroup(const std::string &groupName, pid_t pid);
-    bool deleteCgroup(const std::string &groupName);
+namespace CgroupManager
+{
+    std::string generateCgroupName(int cpuPercent, size_t memoryBytes);
+    bool isCgroupInitialized(const std::string &groupName, int cpuPercent, size_t memoryBytes);
+    void runProgramInCgroup(int argc, char *argv[], const std::string &groupName);
+    void cleanUpCgroup(const std::string &groupName);
 }
 
 #endif

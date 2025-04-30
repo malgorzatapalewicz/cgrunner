@@ -4,8 +4,8 @@
 #include <string>
 #include <vector>
 
-namespace ProcessRunner {
-    
+namespace ProcessRunner
+{
     void runProgram(const std::string &commandLine);
 }
 
