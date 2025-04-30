@@ -20,54 +20,51 @@ void checkRootPrivileges() {
 bool startsWithDash(const char* arg) {
     return arg[0] == '-';
 }
-bool isCpuLimitExceeded(const char* arg, int& cpuPercent) {
 
-    if (startsWithDash(arg)) {
-        reportUserError("Missing CPU limit value after --cpu.");
-        return false;
-    }
 
-    try {
-        cpuPercent = std::stoi(arg);
-    } catch (const std::invalid_argument& e) {
-        reportUserError("CPU limit must be a valid number.");
-        return false;
-    } catch (const std::out_of_range& e) {
-        reportUserError("CPU limit value is out of range.");
-        return false;
-    }
+template <typename T>
+bool tryConvertLimit(const char* arg, T& limitValue, const char* limitType) {
 
-    if (cpuPercent <= 0 || cpuPercent > 100) {
-        reportUserError("CPU limit must be a number between 1 and 100.");
-        return false;
-    }
-
-    return true;
-}
-
-bool isMemoryLimitCorrect(const char* arg, size_t& memoryBytes) {
-
-    if (startsWithDash(arg)){
-        reportUserError("Missing memory limit value after --memory.");
+    if(startsWithDash(arg)){
+        reportUserError(std::string(limitType) + " limit must be a positive number.");
         return false;
     } 
 
     try {
-        memoryBytes = std::stoul(arg);
+        if constexpr (std::is_same_v<T, int>) {
+            limitValue = std::stoi(arg);
+        } else if constexpr (std::is_same_v<T, size_t>) {
+            limitValue = std::stoul(arg);
+        }
+        return true;
+        
     } catch (const std::invalid_argument&) {
-        reportUserError("Memory limit must be a valid number.");
-        return false;
+        reportUserError(std::string(limitType) + " limit must be a valid number.");
     } catch (const std::out_of_range&) {
-        reportUserError("Memory limit value is out of range.");
-        return false;
+        reportUserError(std::string(limitType) + " limit value is out of range.");
+    }
+    return false;
+}
+
+bool isCpuLimitExceeded(const char* arg, int& cpuPercent) {
+
+    if(tryConvertLimit(arg, cpuPercent, "CPU")){
+        if (cpuPercent > 0 && cpuPercent <= 100) return true;
+        reportUserError("CPU limit must be a number between 1 and 100.");
     }
 
-    if (memoryBytes == 0) {
+    return false;
+}
+
+
+bool isMemoryLimitValid(const char* arg, size_t& memoryBytes) {
+
+    if (tryConvertLimit(arg, memoryBytes, "Memory")) {
+        if (memoryBytes > 0) return true;
         reportUserError("Memory limit must be greater than 0.");
-        return false;
     }
 
-    return true;
+    return false;
 }
 
 int main(int argc, char* argv[]) {
@@ -102,7 +99,7 @@ int main(int argc, char* argv[]) {
                 if (!cpuSet) return 1;
                 break;
             case 'm':
-                memorySet = isMemoryLimitCorrect(optarg, memoryBytes);
+                memorySet = isMemoryLimitValid(optarg, memoryBytes);
                 if (!memorySet) return 1;
                 break;
             default:
