@@ -1,5 +1,6 @@
 #include "CgroupManager.h"
 #include "ProcessRunner.h"
+#include "ArgumentParser.h"
 #include <iostream>
 #include <cstring>
 #include <getopt.h>
@@ -7,6 +8,7 @@
 
 using namespace ProcessRunner;
 using namespace CgroupManager;
+using namespace ArgumentParser;
 using namespace ErrorUtils;
 
 void checkRootPrivileges() {
@@ -20,75 +22,6 @@ void validateExecCommand(char *argv[]) {
     if (std::string(argv[1]) != "exec") {
         reportUserError("Usage: ./cgrunner exec --cpu <cpu_percent> --memory <memory_bytes> \"<program> [args...]\"");
         exit(1);
-    }
-}
-
-bool startsWithDash(const char *arg) {
-    return arg[0] == '-';
-}
-
-template <typename T>
-bool isProperLimit(const char *arg, T &limitValue, const char *limitType) {
-    if (startsWithDash(arg)) {
-        reportUserError(std::string(limitType) + " limit must be a positive number.");
-        return false;
-    }
-
-    try {
-        if constexpr (std::is_same_v<T, int>) {
-            limitValue = std::stoi(arg);
-        } else if constexpr (std::is_same_v<T, size_t>) {
-            limitValue = std::stoul(arg);
-        }
-        return true;
-    } catch (const std::invalid_argument &) {
-        reportUserError(std::string(limitType) + " limit must be a valid number.");
-    } catch (const std::out_of_range &) {
-        reportUserError(std::string(limitType) + " limit value is out of range.");
-    }
-    return false;
-}
-
-bool isCpuLimitExceeded(const char *arg, int &cpuPercent) {
-    if (isProperLimit(arg, cpuPercent, "CPU")) {
-        if (cpuPercent > 0 && cpuPercent <= 100) return true;
-        reportUserError("CPU limit must be a number between 1 and 100.");
-    }
-
-    return false;
-}
-
-bool isMemoryLimitValid(const char *arg, size_t &memoryBytes) {
-    if (isProperLimit(arg, memoryBytes, "Memory")) {
-        if (memoryBytes > 0) return true;
-        reportUserError("Memory limit must be greater than 0.");
-    }
-
-    return false;
-}
-
-void parseArguments(int argc, char *argv[], bool &cpuSet, bool &memorySet, int &cpuPercent, size_t &memoryBytes) {
-    static struct option options[] = {
-        {"cpu", required_argument, nullptr, 'c'},
-        {"memory", required_argument, nullptr, 'm'},
-        {nullptr, 0, nullptr, 0}
-    };
-
-    int opt;
-    while ((opt = getopt_long(argc, argv, "c:m:", options, nullptr)) != -1) {
-        switch (opt) {
-            case 'c':
-                cpuSet = isCpuLimitExceeded(optarg, cpuPercent);
-                if (!cpuSet) return;
-                break;
-            case 'm':
-                memorySet = isMemoryLimitValid(optarg, memoryBytes);
-                if (!memorySet) return;
-                break;
-            default:
-                reportUserError("Invalid option.");
-                return;
-        }
     }
 }
 
@@ -150,6 +83,7 @@ int main(int argc, char *argv[]) {
     bool cpuLimitProvided = false, memoryLimitProvided = false;
 
     parseArguments(argc, argv, cpuLimitProvided, memoryLimitProvided, cpuPercent, memoryBytes);
+
     if (!cpuLimitProvided || !memoryLimitProvided) {
         reportUserError("Both CPU and memory limits must be specified.");
         return 1;

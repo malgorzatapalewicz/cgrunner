@@ -9,5 +9,6 @@ add_executable(cgrunner
     src/main.cpp
     src/CgroupManager.cpp
     src/ProcessRunner.cpp
+    src/ArgumentParser.cpp
     src/ErrorUtils.cpp
 )
